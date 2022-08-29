@@ -1,0 +1,48 @@
+name: Fix code styling
+
+on:
+  workflow_call:
+    inputs:
+      php:
+        default: "8.1"
+        type: string
+      message:
+        default: Fix code styling
+        type: string
+
+jobs:
+  codestyle:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ inputs.php }}
+          extensions: json, dom, curl, libxml, mbstring
+          tools: composer:v2
+          coverage: none
+
+      - name: Get Composer Cache Directory
+        id: composer-cache
+        run: echo "::set-output name=dir::$(composer config cache-files-dir)"
+
+      - uses: actions/cache@v2
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install Dependencies
+        run: composer install --no-interaction
+
+      - name: Execute code style fix
+        run: composer pint
+
+      - name: Commit linted files
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: ${{ inputs.message }}

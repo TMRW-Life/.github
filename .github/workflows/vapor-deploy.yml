@@ -1,0 +1,57 @@
+name: Deployment
+
+on:
+  workflow_call:
+    inputs:
+      php:
+        default: "8.1"
+        type: string
+      passport:
+        default: true
+        type: boolean
+      environment:
+        default: staging
+        type: string
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ inputs.php }}
+          tools: composer:v2
+          coverage: none
+
+      - name: Get Composer Cache Directory
+        id: composer-cache
+        run: echo "::set-output name=dir::$(composer config cache-files-dir)"
+
+      - uses: actions/cache@v3
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install Dependencies
+        run: composer install --no-interaction
+
+      - name: Setup Passport
+        if: ${{ inputs.passport }}
+        run: php artisan passport:keys --force
+
+      - name: Execute tests
+        run: php artisan test --parallel
+
+      - name: Require Vapor CLI
+        run: composer global require laravel/vapor-cli
+
+      - name: Deploy Environment
+        run: vapor deploy ${{ inputs.environment }} --commit="${{ github.sha }}" --message="${{ github.event.head_commit.message }}"
+        env:
+          VAPOR_API_TOKEN: ${{ secrets.VAPOR_API_TOKEN }}

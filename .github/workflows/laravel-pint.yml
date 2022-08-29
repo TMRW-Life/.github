@@ -40,7 +40,7 @@ jobs:
         run: composer install --no-interaction
 
       - name: Execute code style fix
-        run: composer pint
+        run: vendor/bin/pint
 
       - name: Commit linted files
         uses: stefanzweifel/git-auto-commit-action@v4

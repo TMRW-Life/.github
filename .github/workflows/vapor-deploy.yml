@@ -45,9 +45,6 @@ jobs:
         if: ${{ inputs.passport }}
         run: php artisan passport:keys --force
 
-      - name: Execute tests
-        run: php artisan test --parallel
-
       - name: Require Vapor CLI
         run: composer global require laravel/vapor-cli
 

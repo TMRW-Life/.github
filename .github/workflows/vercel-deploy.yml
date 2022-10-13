@@ -1,8 +1,8 @@
 name: Deployment
 
 env:
-  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+  VERCEL_ORG_ID: ${{ inputs.vercel_org_id }}
+  VERCEL_PROJECT_ID: ${{ inputs.vercel_project_id }}
 
 on:
   workflow_call:
@@ -13,6 +13,12 @@ on:
       environment:
         default: preview
         type: string
+      vercel_org_id:
+        type: string
+        required: true
+      vercel_project_id:
+        type: string
+        required: true
 
 jobs:
   deploy:
@@ -40,20 +46,20 @@ jobs:
         run: lokalise2 --token="${{ secrets.LOKALISE_API_KEY }}" --project-id="${{ secrets.LOKALISE_PROJECT_ID }}" file download --format=json --unzip-to=./public/locales
 
       - name: Pull Vercel Environment Information
-        run: yarn dlx vercel@latest pull --yes --environment=${{ inputs.environment }} --token=${{ secrets.VERCEL_TOKEN }}
+        run: yarn vercel pull --yes --environment=${{ inputs.environment }} --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Build Project Artifacts (Production)
         if: ${{ inputs.environment == 'production' }}
-        run: yarn dlx vercel@latest build --prod --token=${{ secrets.VERCEL_TOKEN }}
+        run: yarn vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Build Project Artifacts (Preview)
         if: ${{ inputs.environment != 'production' }}
-        run: yarn dlx vercel@latest build --token=${{ secrets.VERCEL_TOKEN }}
+        run: yarn vercel build --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Deploy Project Artifacts to Vercel (Production)
         if: ${{ inputs.environment == 'production' }}
-        run: yarn dlx vercel@latest deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+        run: yarn vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Deploy Project Artifacts to Vercel (Preview)
         if: ${{ inputs.environment != 'production' }}
-        run: yarn dlx vercel@latest deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
+        run: yarn vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }}

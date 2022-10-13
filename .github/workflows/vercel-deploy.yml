@@ -1,9 +1,5 @@
 name: Deployment
 
-env:
-  VERCEL_ORG_ID: ${{ inputs.vercel_org_id }}
-  VERCEL_PROJECT_ID: ${{ inputs.vercel_project_id }}
-
 on:
   workflow_call:
     inputs:
@@ -13,12 +9,6 @@ on:
       environment:
         default: preview
         type: string
-      vercel_org_id:
-        type: string
-        required: true
-      vercel_project_id:
-        type: string
-        required: true
 
 jobs:
   deploy:

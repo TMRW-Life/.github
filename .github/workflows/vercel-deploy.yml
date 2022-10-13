@@ -24,6 +24,9 @@ jobs:
           node-version: 16
           cache: 'yarn'
 
+      - name: Install yarn
+        run: npm i -g npm yarn@latest
+
       - name: Install Vercel CLI
         run: yarn global add vercel@latest
 

@@ -1,0 +1,55 @@
+name: Deployment
+
+on:
+  workflow_call:
+    inputs:
+      lokalise:
+        default: true
+        type: boolean
+      environment:
+        default: preview
+        type: string
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup NodeJS
+        uses: actions/setup-node@v3
+        cache: 'yarn'
+        with:
+          node-version: 16
+
+      - name: Install Vercel CLI
+        run: yarn global add vercel@latest
+
+      - name: Setup Lokalise
+        if: ${{ inputs.lokalise }}
+        run: curl -sfL https://raw.githubusercontent.com/lokalise/lokalise-cli-2-go/master/install.sh | sh
+
+      - name: Download Lokalise Translations
+        if: ${{ inputs.lokalise }}
+        run: lokalise2 --token="${{ secrets.LOKALISE_API_KEY }}" --project-id="${{ secrets.LOKALISE_PROJECT_ID }}" file download --format=json --unzip-to=./public/locales
+
+      - name: Pull Vercel Environment Information
+        run: vercel pull --yes --environment=${{ inputs.lokalise }} --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build Project Artifacts (Production)
+        if: ${{ inputs.environment == 'production' }}
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build Project Artifacts (Preview)
+        if: ${{ inputs.environment != 'production' }}
+        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy Project Artifacts to Vercel (Production)
+        if: ${{ inputs.environment == 'production' }}
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy Project Artifacts to Vercel (Preview)
+        if: ${{ inputs.environment != 'production' }}
+        run: vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }}

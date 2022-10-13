@@ -20,9 +20,9 @@ jobs:
 
       - name: Setup NodeJS
         uses: actions/setup-node@v3
-        cache: 'yarn'
         with:
           node-version: 16
+          cache: 'yarn'
 
       - name: Install Vercel CLI
         run: yarn global add vercel@latest

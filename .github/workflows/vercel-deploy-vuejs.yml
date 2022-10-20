@@ -1,0 +1,72 @@
+name: Deployment
+
+on:
+  workflow_call:
+    inputs:
+      lokalise:
+        default: true
+        type: boolean
+      environment:
+        default: preview
+        type: string
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup NodeJS
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install
+
+      - name: Setup Lokalise
+        if: ${{ inputs.lokalise }}
+        run: curl -sfL https://raw.githubusercontent.com/lokalise/lokalise-cli-2-go/master/install.sh | sh
+
+      - name: Download Lokalise Translations
+        if: ${{ inputs.lokalise }}
+        run: |
+          lokalise2 --token="${{ secrets.LOKALISE_API_KEY }}" --project-id="${{ secrets.LOKALISE_PROJECT_ID }}" file download --unzip-to=./src --format=json --original-filenames=false
+          mv ./src/locale/es_ES.json ./src/locale/es.json
+
+      - name: Pull Vercel Environment Information
+        run: yarn vercel pull --yes --environment=${{ inputs.environment }} --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      - name: Build Project Artifacts (Production)
+        if: ${{ inputs.environment == 'production' }}
+        run: yarn vercel -e VUE_APP_VERSION="${{ github.ref_name }}" build --prod --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      - name: Build Project Artifacts (Preview)
+        if: ${{ inputs.environment != 'production' }}
+        run: yarn vercel -e VUE_APP_VERSION=TEST_SERVER build --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      - name: Deploy Project Artifacts to Vercel (Production)
+        if: ${{ inputs.environment == 'production' }}
+        run: yarn vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      - name: Deploy Project Artifacts to Vercel (Preview)
+        if: ${{ inputs.environment != 'production' }}
+        run: yarn vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}

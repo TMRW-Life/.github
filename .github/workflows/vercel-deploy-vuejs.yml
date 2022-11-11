@@ -29,7 +29,9 @@ jobs:
 
       - name: Setup Lokalise
         if: ${{ inputs.lokalise }}
-        run: curl -sfL https://raw.githubusercontent.com/lokalise/lokalise-cli-2-go/master/install.sh | sh
+        run: |
+          curl -sfL https://raw.githubusercontent.com/lokalise/lokalise-cli-2-go/master/install.sh | sh
+          mv ./bin/lokalise2 /usr/local/bin/lokalise2
 
       - name: Download Lokalise Translations
         if: ${{ inputs.lokalise }}

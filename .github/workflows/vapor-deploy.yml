@@ -39,7 +39,7 @@ jobs:
 
       - name: Install Dependencies
         env:
-          COMPOSER_AUTH: '{"github-oauth": {"github.com": "${{secrets.COMPOSER_AUTH}}"} }' # [tl! **]
+          COMPOSER_AUTH: '{"github-oauth": {"github.com": "${{secrets.COMPOSER_AUTH}}"} }'
         run: composer install --no-interaction
 
       - name: Setup Passport

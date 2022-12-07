@@ -21,6 +21,8 @@ jobs:
           php-version: ${{ inputs.php }}
           tools: composer:v2
           coverage: none
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Get Composer Cache Directory
         run: echo "composer_cache_dir=$(composer config cache-files-dir)" >> $GITHUB_ENV
@@ -32,8 +34,6 @@ jobs:
           restore-keys: ${{ runner.os }}-composer-
 
       - name: Install Dependencies
-        env:
-          COMPOSER_AUTH: '{"github-oauth": {"github.com": "${{secrets.COMPOSER_AUTH}}"} }'
         run: composer install --no-interaction
 
       - name: Execute type checking

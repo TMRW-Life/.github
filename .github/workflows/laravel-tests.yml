@@ -44,4 +44,4 @@ jobs:
         run: php artisan passport:keys --force
 
       - name: Execute tests
-        run: php artisan test --parallel
+        run: php artisan test --parallel --env=testing

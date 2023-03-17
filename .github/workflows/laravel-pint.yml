@@ -1,13 +1,10 @@
-name: Fix code styling
+name: Code style check
 
 on:
   workflow_call:
     inputs:
       php:
         default: "8.1"
-        type: string
-      message:
-        default: Fix code styling
         type: string
 
 jobs:
@@ -39,10 +36,5 @@ jobs:
       - name: Install Dependencies
         run: composer install --no-interaction
 
-      - name: Execute code style fix
-        run: vendor/bin/pint
-
-      - name: Commit linted files
-        uses: stefanzweifel/git-auto-commit-action@v4
-        with:
-          commit_message: ${{ inputs.message }}
+      - name: Execute code style check
+        run: vendor/bin/pint --test

@@ -24,10 +24,6 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Change working directory
-        if: ${{ inputs.cwd != '.' }}
-        run: cd ${{ inputs.cwd }}
-
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -48,15 +44,19 @@ jobs:
 
       - name: Install Dependencies
         run: composer install --no-interaction
+        working-directory: ${{ inputs.cwd == '.' && './' || format('./{0}', inputs.cwd) }}
 
       - name: Setup Passport
         if: ${{ inputs.passport }}
         run: php artisan passport:keys --force
+        working-directory: ${{ inputs.cwd == '.' && './' || format('./{0}', inputs.cwd) }}
 
       - name: Require Vapor CLI
         run: composer global require laravel/vapor-cli
+        working-directory: ${{ inputs.cwd == '.' && './' || format('./{0}', inputs.cwd) }}
 
       - name: Deploy Environment
         run: vapor deploy ${{ inputs.environment }} --commit="${{ github.sha }}" --message="${{ github.event.head_commit.message }}"
+        working-directory: ${{ inputs.cwd == '.' && './' || format('./{0}', inputs.cwd) }}
         env:
           VAPOR_API_TOKEN: ${{ secrets.VAPOR_API_TOKEN }}

@@ -6,6 +6,9 @@ on:
       php:
         default: "8.1"
         type: string
+      cwd:
+        default: "."
+        type: string
 
 jobs:
   codestyle:
@@ -14,6 +17,10 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
+
+      - name: Change working directory
+        if: ${{ inputs.cwd != '.' }}
+        run: cd ${{ inputs.cwd }}
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2

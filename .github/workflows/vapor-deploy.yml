@@ -15,6 +15,9 @@ on:
       cwd:
         default: "."
         type: string
+      LARAVEL_ENV_ENCRYPTION_KEY:
+        default: ""
+        type: string
 
 jobs:
   deploy:
@@ -60,3 +63,4 @@ jobs:
         working-directory: ${{ inputs.cwd == '.' && './' || format('./{0}', inputs.cwd) }}
         env:
           VAPOR_API_TOKEN: ${{ secrets.VAPOR_API_TOKEN }}
+          LARAVEL_ENV_ENCRYPTION_KEY: ${{ inputs.LARAVEL_ENV_ENCRYPTION_KEY }}

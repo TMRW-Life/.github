@@ -2,6 +2,17 @@ name: Deployment
 
 on:
   workflow_call:
+    secrets:
+      VERCEL_TOKEN:
+        required: true
+      VERCEL_ORG_ID:
+        required: true
+      VERCEL_PROJECT_ID:
+        required: true
+      LOKALISE_API_KEY:
+        required: true
+      LOKALISE_PROJECT_ID:
+        required: true
     inputs:
       lokalise:
         default: true

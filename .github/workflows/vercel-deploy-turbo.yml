@@ -35,6 +35,7 @@ jobs:
         with:
           node-version: 18
           cache: 'yarn'
+          cache-dependency-path: ${{ inputs.cwd }}**/yarn.lock
 
       - name: Install dependencies
         run: yarn install
@@ -46,11 +47,11 @@ jobs:
           curl -sfL https://raw.githubusercontent.com/lokalise/lokalise-cli-2-go/master/install.sh | sh
           mv ./bin/lokalise2 /usr/local/bin/lokalise2
           lokalise2 --token="${{ secrets.LOKALISE_API_KEY }}" --project-id="${{ secrets.LOKALISE_PROJECT_ID }}" file download --format=json --unzip-to=./public/locales
-        working-directory: ${{ format('{0}/apps/{1}', inputs.cwd, inputs.scope) }}
+        working-directory: ${{ format('{0}apps/{1}', inputs.cwd, inputs.scope) }}
 
       - name: Pull Vercel Environment Information
         run: yarn vercel pull --yes --environment=${{ inputs.environment }} --token=${{ secrets.VERCEL_TOKEN }}
-        working-directory: ${{ format('{0}/apps/{1}', inputs.cwd, inputs.scope) }}
+        working-directory: ${{ format('{0}apps/{1}', inputs.cwd, inputs.scope) }}
 
       - name: Build Project Artifacts
         run: yarn turbo run build --scope=${{ inputs.scope }} --include-dependencies --no-deps
@@ -58,4 +59,4 @@ jobs:
 
       - name: Deploy Project Artifacts to Vercel
         run: yarn vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }} ${{ inputs.environment == 'production' && '--prod' || '' }}
-        working-directory: ${{ format('{0}/apps/{1}', inputs.cwd, inputs.scope) }}
+        working-directory: ${{ format('{0}apps/{1}', inputs.cwd, inputs.scope) }}

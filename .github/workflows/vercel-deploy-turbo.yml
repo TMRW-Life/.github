@@ -72,5 +72,5 @@ jobs:
         working-directory: ${{ inputs.cwd }}
 
       - name: Deploy Project Artifacts to Vercel
-        run: vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }} ${{ inputs.environment == 'production' && '--prod' || '' }}
+        run: vercel deploy --token=${{ secrets.VERCEL_TOKEN }} ${{ inputs.environment == 'production' && '--prod' || '' }}
         working-directory: ${{ format('{0}apps/{1}', inputs.cwd, inputs.scope) }}

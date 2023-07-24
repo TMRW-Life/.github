@@ -13,7 +13,7 @@ on:
         default: staging
         type: string
       cwd:
-        default: "."
+        default: "./"
         type: string
       LARAVEL_ENV_ENCRYPTION_KEY:
         default: ""
@@ -47,20 +47,20 @@ jobs:
 
       - name: Install Dependencies
         run: composer install --no-interaction
-        working-directory: ${{ inputs.cwd == '.' && './' || format('./{0}', inputs.cwd) }}
+        working-directory: ${{ inputs.cwd }}
 
       - name: Setup Passport
         if: ${{ inputs.passport }}
         run: php artisan passport:keys --force
-        working-directory: ${{ inputs.cwd == '.' && './' || format('./{0}', inputs.cwd) }}
+        working-directory: ${{ inputs.cwd }}
 
       - name: Require Vapor CLI
         run: composer global require laravel/vapor-cli
-        working-directory: ${{ inputs.cwd == '.' && './' || format('./{0}', inputs.cwd) }}
+        working-directory: ${{ inputs.cwd }}
 
       - name: Deploy Environment
         run: vapor deploy ${{ inputs.environment }} --commit="${{ github.sha }}" --message="${{ github.event.head_commit.message }}"
-        working-directory: ${{ inputs.cwd == '.' && './' || format('./{0}', inputs.cwd) }}
+        working-directory: ${{ inputs.cwd }}
         env:
           VAPOR_API_TOKEN: ${{ secrets.VAPOR_API_TOKEN }}
           LARAVEL_ENV_ENCRYPTION_KEY: ${{ inputs.LARAVEL_ENV_ENCRYPTION_KEY }}

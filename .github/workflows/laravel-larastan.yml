@@ -7,7 +7,7 @@ on:
         default: "8.1"
         type: string
       cwd:
-        default: "."
+        default: "./"
         type: string
 
 jobs:
@@ -38,8 +38,8 @@ jobs:
 
       - name: Install Dependencies
         run: composer install --no-interaction
-        working-directory: ${{ inputs.cwd == '.' && './' || format('./{0}', inputs.cwd) }}
+        working-directory: ${{ inputs.cwd }}
 
       - name: Execute type checking
         run: vendor/bin/phpstan analyse
-        working-directory: ${{ inputs.cwd == '.' && './' || format('./{0}', inputs.cwd) }}
+        working-directory: ${{ inputs.cwd }}

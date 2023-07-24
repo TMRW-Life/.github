@@ -37,6 +37,9 @@ jobs:
           cache: 'yarn'
           cache-dependency-path: ${{ inputs.cwd }}**/yarn.lock
 
+      - name: Install Vercel CLI globally
+        run: yarn global add vercel
+
       - name: Install dependencies
         run: yarn install
         working-directory: ${{ inputs.cwd }}
@@ -50,7 +53,7 @@ jobs:
         working-directory: ${{ format('{0}apps/{1}', inputs.cwd, inputs.scope) }}
 
       - name: Pull Vercel Environment Information
-        run: yarn vercel pull --yes --environment=${{ inputs.environment }} --token=${{ secrets.VERCEL_TOKEN }}
+        run: vercel pull --yes --environment=${{ inputs.environment }} --token=${{ secrets.VERCEL_TOKEN }}
         working-directory: ${{ format('{0}apps/{1}', inputs.cwd, inputs.scope) }}
 
       - name: Build Project Artifacts
@@ -58,5 +61,5 @@ jobs:
         working-directory: ${{ inputs.cwd }}
 
       - name: Deploy Project Artifacts to Vercel
-        run: yarn vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }} ${{ inputs.environment == 'production' && '--prod' || '' }}
+        run: vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }} ${{ inputs.environment == 'production' && '--prod' || '' }}
         working-directory: ${{ format('{0}apps/{1}', inputs.cwd, inputs.scope) }}

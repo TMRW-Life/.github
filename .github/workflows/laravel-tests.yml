@@ -4,14 +4,18 @@ on:
   workflow_call:
     inputs:
       php:
-        default: "8.1"
+        description: 'Specify the php version (https://github.com/shivammathur/setup-php#tada-php-support)'
         type: string
+        required: true
       passport:
-        default: true
+        description: 'Generate private and public keys for Laravel Passport'
         type: boolean
-      cwd:
-        default: "./"
+        required: true
+      subdirectory:
+        description: 'Specify the subdirectory of the project. Useful for monorepos. (e.g., "backend")'
         type: string
+        required: false
+        default: ''
 
 jobs:
   tests:
@@ -19,7 +23,14 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+
+      - name: Format directory path
+        id: format-directory
+        run: |
+          formattedDir="${{ format('{0}/{1}', github.workspace, inputs.subdirectory) }}"
+          formattedDir="${formattedDir%/}" # Remove trailing slash if present
+          echo "dir=${formattedDir}" >> $GITHUB_OUTPUT
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -30,24 +41,28 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.COMPOSER_TOKEN }}
 
-      - name: Get Composer Cache Directory
-        run: echo "composer_cache_dir=$(composer config cache-files-dir)" >> $GITHUB_ENV
+      - name: Get composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+        working-directory: ${{ steps.format-directory.outputs.dir }}
 
-      - uses: actions/cache@v3
+      - name: Cache Composer dependencies
+        uses: actions/cache@v3
         with:
-          path: ${{ env.composer_cache_dir }}
-          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
-          restore-keys: ${{ runner.os }}-composer-
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles(format('{0}/{1}', steps.format-directory.outputs.dir, 'composer.lock')) }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
 
       - name: Install Dependencies
         run: composer install --no-interaction
-        working-directory: ${{ inputs.cwd }}
+        working-directory: ${{ steps.format-directory.outputs.dir }}
 
       - name: Setup Passport
         if: ${{ inputs.passport }}
         run: php artisan passport:keys --force
-        working-directory: ${{ inputs.cwd }}
+        working-directory: ${{ steps.format-directory.outputs.dir }}
 
       - name: Execute tests
         run: php artisan test --parallel --env=testing
-        working-directory: ${{ inputs.cwd }}
+        working-directory: ${{ steps.format-directory.outputs.dir }}

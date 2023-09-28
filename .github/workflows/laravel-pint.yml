@@ -4,11 +4,14 @@ on:
   workflow_call:
     inputs:
       php:
-        default: "8.1"
+        description: 'Specify the php version (https://github.com/shivammathur/setup-php#tada-php-support)'
         type: string
-      cwd:
-        default: "./"
+        required: true
+      subdirectory:
+        description: 'Specify the subdirectory of the project. Useful for monorepos. (e.g., "backend")'
         type: string
+        required: false
+        default: ''
 
 jobs:
   codestyle:
@@ -16,7 +19,14 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+
+      - name: Format directory path
+        id: format-directory
+        run: |
+          formattedDir="${{ format('{0}/{1}', github.workspace, inputs.subdirectory) }}"
+          formattedDir="${formattedDir%/}" # Remove trailing slash if present
+          echo "dir=${formattedDir}" >> $GITHUB_OUTPUT
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -27,19 +37,29 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.COMPOSER_TOKEN }}
 
-      - name: Get Composer Cache Directory
-        run: echo "composer_cache_dir=$(composer config cache-files-dir)" >> $GITHUB_ENV
+      - name: Get composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+        working-directory: ${{ steps.format-directory.outputs.dir }}
 
-      - uses: actions/cache@v3
+      - name: Cache Composer dependencies
+        uses: actions/cache@v3
         with:
-          path: ${{ env.composer_cache_dir }}
-          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
-          restore-keys: ${{ runner.os }}-composer-
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles(format('{0}/{1}', steps.format-directory.outputs.dir, 'composer.lock')) }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
 
       - name: Install Dependencies
         run: composer install --no-interaction
-        working-directory: ${{ inputs.cwd }}
+        working-directory: ${{ steps.format-directory.outputs.dir }}
 
       - name: Execute code style check
-        run: vendor/bin/pint --test
-        working-directory: ${{ inputs.cwd }}
+        run: vendor/bin/pint
+        working-directory: ${{ steps.format-directory.outputs.dir }}
+
+      - name: Commit changes
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: Formatting
+          skip_fetch: true

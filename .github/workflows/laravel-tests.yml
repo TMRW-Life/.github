@@ -47,7 +47,7 @@ jobs:
         working-directory: ${{ steps.format-directory.outputs.dir }}
 
       - name: Cache Composer dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
           key: ${{ runner.os }}-composer-${{ hashFiles(format('{0}/{1}', steps.format-directory.outputs.dir, 'composer.lock')) }}

@@ -7,11 +7,6 @@ on:
         description: 'Specify the php version (https://github.com/shivammathur/setup-php#tada-php-support)'
         type: string
         required: true
-      subdirectory:
-        description: 'Specify the subdirectory of the project. Useful for monorepos. (e.g., "backend")'
-        type: string
-        required: false
-        default: ''
 
 jobs:
   analyse:
@@ -20,13 +15,6 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-
-      - name: Format directory path
-        id: format-directory
-        run: |
-          formattedDir="${{ format('{0}/{1}', github.workspace, inputs.subdirectory) }}"
-          formattedDir="${formattedDir%/}" # Remove trailing slash if present
-          echo "dir=${formattedDir}" >> $GITHUB_OUTPUT
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -52,8 +40,6 @@ jobs:
 
       - name: Install Dependencies
         run: composer install --no-interaction
-        working-directory: ${{ steps.format-directory.outputs.dir }}
 
       - name: Execute type checking
         run: vendor/bin/phpstan analyse --ansi --memory-limit 256M
-        working-directory: ${{ steps.format-directory.outputs.dir }}

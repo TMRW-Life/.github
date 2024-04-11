@@ -11,11 +11,6 @@ on:
         description: 'Generate private and public keys for Laravel Passport'
         type: boolean
         required: true
-      subdirectory:
-        description: 'Specify the subdirectory of the project. Useful for monorepos. (e.g., "backend")'
-        type: string
-        required: false
-        default: ''
 
 jobs:
   tests:
@@ -24,13 +19,6 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-
-      - name: Format directory path
-        id: format-directory
-        run: |
-          formattedDir="${{ format('{0}/{1}', github.workspace, inputs.subdirectory) }}"
-          formattedDir="${formattedDir%/}" # Remove trailing slash if present
-          echo "dir=${formattedDir}" >> $GITHUB_OUTPUT
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -56,13 +44,10 @@ jobs:
 
       - name: Install Dependencies
         run: composer install --no-interaction
-        working-directory: ${{ steps.format-directory.outputs.dir }}
 
       - name: Setup Passport
         if: ${{ inputs.passport }}
         run: php artisan passport:keys --force
-        working-directory: ${{ steps.format-directory.outputs.dir }}
 
       - name: Execute tests
         run: php artisan test --parallel --env=testing
-        working-directory: ${{ steps.format-directory.outputs.dir }}

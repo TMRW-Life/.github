@@ -7,11 +7,6 @@ on:
         description: 'Specify the php version. [Docs](https://github.com/shivammathur/setup-php#tada-php-support)'
         type: string
         required: true
-      subdirectory:
-        description: 'Specify the subdirectory of the project. Useful for monorepos. (e.g., "backend")'
-        type: string
-        required: false
-        default: ''
       environment:
         description: 'Specify the environment to deploy to (e.g., "production" | "staging")'
         type: string
@@ -28,13 +23,6 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-
-      - name: Format directory path
-        id: format-directory
-        run: |
-          formattedDir="${{ format('{0}/{1}', github.workspace, inputs.subdirectory) }}"
-          formattedDir="${formattedDir%/}" # Remove trailing slash if present
-          echo "dir=${formattedDir}" >> $GITHUB_OUTPUT
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -60,30 +48,24 @@ jobs:
 
       - name: Install Dependencies
         run: composer install --no-interaction
-        working-directory: ${{ steps.format-directory.outputs.dir }}
 
       - name: Require Vapor CLI
         run: composer global require laravel/vapor-cli
-        working-directory: ${{ steps.format-directory.outputs.dir }}
 
       - name: Download dotenv script
         run: |
           curl https://raw.githubusercontent.com/bashup/dotenv/master/dotenv --output dotenv
           chmod +x dotenv
-        working-directory: ${{ steps.format-directory.outputs.dir }}
 
       - name: Download environment
         run: vapor env:pull ${{ inputs.environment }}
-        working-directory: ${{ steps.format-directory.outputs.dir }}
         env:
           VAPOR_API_TOKEN: ${{ secrets.VAPOR_API_TOKEN }}
 
       - name: Set APP_VERSION
         run: ./dotenv -f ${{ format('.env.{0}', inputs.environment) }} set APP_VERSION="${{ inputs.version }}"
-        working-directory: ${{ steps.format-directory.outputs.dir }}
 
       - name: Upload environment
         run: vapor env:push ${{ inputs.environment }} --keep
-        working-directory: ${{ steps.format-directory.outputs.dir }}
         env:
           VAPOR_API_TOKEN: ${{ secrets.VAPOR_API_TOKEN }}
